@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CifraSagrada</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1E2A38">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER (Hidden in performance mode) -->
+        <header id="main-header">
+            <div class="logo">
+                <img src="logo.png" alt="CifraSagrada Logo" style="height: 48px; width: auto;">
+            </div>
+            <div class="user-action" onclick="navigate('perfil')">
+                <i class="fa-regular fa-user-circle" style="font-size: 24px; color: var(--color-secondary); cursor: pointer;"></i>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <div id="page-dashboard" class="page active">
+            <h2>Bem-vindo ao CifraSagrada 🙏</h2>
+            <p>O que vamos tocar hoje?</p>
+
+            <div class="quick-actions">
+                <div class="action-card" onclick="openEditor(null)">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span>Nova Cifra</span>
+                </div>
+                <div class="action-card" onclick="navigate('importador')">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                    <span>Importar Cifra</span>
+                </div>
+            </div>
+
+            <h3>Acessados Recentemente</h3>
+            <div class="recent-list" id="recent-list">
+                <!-- Populated via JS -->
+            </div>
+
+            <div class="spiritual-quote">
+                "Quem canta, reza duas vezes." <br><small>- Santo Agostinho</small>
+            </div>
+        </div>
+
+        <!-- EDITOR -->
+        <div id="page-editor" class="page">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button class="btn btn-outline" style="padding: 8px; width: auto;" onclick="navigate('dashboard')">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2 style="margin: 0; display: flex; align-items: center;">Editor de Cifra</h2>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Título da Música</label>
+                <input type="text" id="editor-title" class="form-control" placeholder="Ex: Sonda-me, Usa-me">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Tom</label>
+                    <input type="text" id="editor-key" class="form-control" placeholder="Ex: G">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Artista / Autor</label>
+                    <input type="text" id="editor-artist" class="form-control" placeholder="Ex: Aline Barros">
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <button class="toolbar-btn" onclick="insertChordBracket()">[Acorde]</button>
+                <button class="toolbar-btn" onclick="transposeContent(-1)">- ½ Tom</button>
+                <button class="toolbar-btn" onclick="transposeContent(1)">+ ½ Tom</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Letra e Cifra (Use [C] para acordes na mesma linha)</label>
+                <textarea id="editor-content" class="form-control" placeholder="Ex: Senhor, Eu se[G]i que tu me so[D]ndas..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+                <button class="btn btn-primary" onclick="saveCifra()">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar
+                </button>
+                <button class="btn btn-secondary" onclick="previewCifra()">
+                    <i class="fa-solid fa-eye"></i> Visualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- IMPORTADOR -->
+        <div id="page-importador" class="page">
+            <h2>Importar Cifra</h2>
+            <p>Cole o texto da cifra abaixo. O CifraSagrada tentará identificar os acordes automaticamente.</p>
+            
+            <div class="form-group">
+                <textarea id="import-content" class="form-control" placeholder="Cole aqui a cifra..."></textarea>
+            </div>
+            
+            <button class="btn btn-primary" onclick="processImport()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Processar Acordes
+            </button>
+        </div>
+
+        <!-- BIBLIOTECA -->
+        <div id="page-biblioteca" class="page">
+            <h2>Biblioteca <span class="premium-badge"><i class="fa-solid fa-star"></i> Pro</span></h2>
+            <div class="form-group">
+                <input type="text" id="search-input" class="form-control" placeholder="Buscar música ou artista..." onkeyup="filterLibrary()">
+            </div>
+            
+            <div class="recent-list" id="library-list">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+        <!-- VISUALIZADOR (Preview before Performance) -->
+        <div id="page-viewer" class="page">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button class="btn btn-outline" style="padding: 8px; width: auto;" onclick="navigate('dashboard')">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2 style="margin: 0; display: flex; align-items: center;" id="view-title">Título</h2>
+            </div>
+            
+            <div class="metadata-bar">
+                <div><strong>Tom:</strong> <span id="view-key"></span></div>
+                <div><strong>Artista:</strong> <span id="view-artist"></span></div>
+            </div>
+
+            <div class="toolbar">
+                <button class="toolbar-btn" onclick="transposeView(-1)">- ½ Tom</button>
+                <button class="toolbar-btn" onclick="transposeView(1)">+ ½ Tom</button>
+                <button class="btn btn-primary" style="padding: 8px 16px; margin-left: auto; width: auto;" onclick="startPerformance()">
+                    <i class="fa-solid fa-play"></i> Modo Tocar
+                </button>
+            </div>
+
+            <div id="view-content" class="render-container">
+                <!-- Content parsed here -->
+            </div>
+        </div>
+
+        <!-- PERFIL -->
+        <div id="page-perfil" class="page">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <i class="fa-solid fa-user-circle" style="font-size: 80px; color: var(--color-primary); margin-bottom: 16px;"></i>
+                <h2>Músico Católico</h2>
+                <p>Plano Atual: <strong>Gratuito</strong></p>
+            </div>
+
+            <div class="card" style="border-color: var(--color-primary); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--color-primary);"></div>
+                <h3>Assinatura Premium</h3>
+                <p>Desbloqueie o poder total para o seu ministério.</p>
+                <ul style="margin-left: 20px; margin-bottom: 20px; color: var(--color-text-light);">
+                    <li>Exportação em PDF formatado</li>
+                    <li>Modo Performance Avançado</li>
+                    <li>Transposição ilimitada</li>
+                    <li>Sincronização em nuvem</li>
+                </ul>
+                <div style="font-size: 24px; font-weight: bold; color: var(--color-secondary); margin-bottom: 16px;">
+                    R$ 9,90 <small style="font-size: 14px; font-weight: normal;">/ mês</small>
+                </div>
+                <button class="btn btn-primary">Assinar Agora</button>
+            </div>
+
+            <button class="btn btn-danger" style="margin-top: 16px;" onclick="clearData()">Limpar Dados Locais</button>
+        </div>
+
+    </div>
+
+    <!-- MODO PERFORMANCE (Full Screen Overlay) -->
+    <div id="page-performance" class="page" style="display: none; background: var(--color-surface); min-height: 100vh; width: 100%; position: absolute; top: 0; left: 0; z-index: 1000;">
+        <div class="perf-header">
+            <div style="display: flex; align-items: center; gap: 16px; padding-left: 20px;">
+                <button class="btn btn-outline" style="padding: 12px; width: auto; border: none;" onclick="stopPerformance()">
+                    <i class="fa-solid fa-xmark" style="font-size: 24px;"></i>
+                </button>
+                <div>
+                    <h2 class="perf-title" id="perf-title">Título</h2>
+                    <div style="font-size: 14px; color: var(--color-text-light);">Tom: <strong id="perf-key"></strong></div>
+                </div>
+            </div>
+            <div class="perf-controls" style="padding-right: 20px;">
+                <button class="toolbar-btn" onclick="toggleAutoScroll()"><i class="fa-solid fa-angles-down"></i> Auto Scroll</button>
+            </div>
+        </div>
+        <div class="container" style="max-width: 800px; padding-top: 20px;">
+            <div id="perf-content" class="perf-content render-container" style="border: none; padding: 0;">
+                <!-- Rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav" id="main-nav">
+        <a class="nav-item active" onclick="navigate('dashboard')">
+            <i class="fa-solid fa-house"></i>
+            Início
+        </a>
+        <a class="nav-item" onclick="openEditor(null)">
+            <i class="fa-solid fa-circle-plus"></i>
+            Criar
+        </a>
+        <a class="nav-item" onclick="navigate('biblioteca')">
+            <i class="fa-solid fa-book-bible"></i>
+            Biblioteca
+        </a>
+    </nav>
+
+    <div id="toast" class="toast">Notificação</div>
+
+    <script src="transposer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
